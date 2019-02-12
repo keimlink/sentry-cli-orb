@@ -4,7 +4,7 @@ orbs:
   orb-tools: circleci/orb-tools@7.3.0
 
 workflows:
-  validate-and-publish:
+  pack-and-publish:
     jobs:
       - orb-tools/pack
       - orb-tools/publish-dev:
