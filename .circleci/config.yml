@@ -7,5 +7,6 @@ workflows:
   validate-and-publish:
     jobs:
       - orb-tools/publish:
+          context: org-global
           orb-path: src/orb.yml
           orb-ref: picturepipe/sentry-cli@dev:{$CIRCLE_BRANCH}
