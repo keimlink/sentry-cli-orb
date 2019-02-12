@@ -19,7 +19,7 @@ uses [Semantic Versioning](https://semver.org/). So the Semantic Version segment
     accordingly!
 4.  Promote the development version of the orb to a semantic release:
     ```console
-    circleci orb publish promote picturepipe/sentry-cli [major|minor|patch]
+    circleci orb publish promote picturepipe/sentry-cli@dev:"$(git rev-parse HEAD | cut -c 1-7)" [major|minor|patch]
     ```
 
 ## License
