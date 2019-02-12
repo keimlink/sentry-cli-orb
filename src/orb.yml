@@ -204,8 +204,8 @@ commands:
             else
               VERSION=$(sentry-cli releases propose-version)
             fi
-            sentry-cli releases finalize --org "<< parameters.org >>" "$VERSION"
-            sentry-cli releases set-commits --auto --org "<< parameters.org >>" "$VERSION"
+            sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
+            sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
   release-deploy:
     description: >
       Create a new Sentry release deployment. Execute for each deployment of a release. If the
@@ -225,5 +225,5 @@ commands:
             else
               VERSION=$(sentry-cli releases propose-version)
             fi
-            sentry-cli releases deploys "$VERSION" new --env "<< parameters.env >>" \
-              --org "<< parameters.org >>"
+            sentry-cli releases --org "<< parameters.org >>" deploys "$VERSION" new \
+              --env "<< parameters.env >>"
