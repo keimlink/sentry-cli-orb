@@ -8,4 +8,4 @@ workflows:
     jobs:
       - orb-tools/publish:
           orb-path: src/orb.yml
-          orb-name: picturepipe/sentry-cli@dev:{$CIRCLE_BRANCH}
+          orb-ref: picturepipe/sentry-cli@dev:{$CIRCLE_BRANCH}
