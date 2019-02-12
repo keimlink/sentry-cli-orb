@@ -9,4 +9,4 @@ workflows:
       - orb-tools/publish:
           context: org-global
           orb-path: src/orb.yml
-          orb-ref: picturepipe/sentry-cli@dev:{$CIRCLE_BRANCH}
+          orb-ref: picturepipe/sentry-cli@dev:${CIRCLE_BRANCH}
