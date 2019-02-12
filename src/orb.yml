@@ -188,7 +188,7 @@ commands:
             else
               VERSION=$(sentry-cli releases propose-version)
             fi
-            sentry-cli releases new --org "<< parameters.org >>" \
+            sentry-cli releases --org "<< parameters.org >>" new \
               --project "<< parameters.project >>" "$VERSION"
   release-finalize:
     description: >
