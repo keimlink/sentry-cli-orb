@@ -1,0 +1,11 @@
+version: 2.1
+
+orbs:
+  orb-tools: circleci/orb-tools@7.3.0
+
+workflows:
+  validate-and-publish:
+    jobs:
+      - orb-tools/publish:
+          orb-path: src/orb.yml
+          orb-name: picturepipe/sentry-cli@dev:{$CIRCLE_BRANCH}

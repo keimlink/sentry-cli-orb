@@ -1,0 +1,229 @@
+# This code is licensed from reelport GmbH to the user under the MIT license. See
+# https://circleci.com/orbs/registry/licensing for details.
+version: 2.1
+
+description: >
+  Manage your Sentry projects with sentry-cli. The SENTRY_AUTH_TOKEN environment variable must be
+  set to authenticate with Sentry. Also set the $SENTRY_ORG environment variable if you don't want
+  to configure each command separately. The Sentry project slug can be configured using the
+  $SENTRY_PROJECT environment variable.
+
+examples:
+  staging-production-pipeline:
+    description: >
+      Example workflow for continuous delivery pipeline using testing, staging and production
+      environments. Each environment uses a matching Sentry environment.
+
+      Each push to the develop branch triggers a testing deployment with a Sentry release using the
+      Git revision as version. Commits and deployment are also tracked by Sentry for this version.
+
+      Each push to the master branch first triggers a staging deployment with a Sentry release
+      using the Git tag as version. The same version is used for the manual production deployment.
+      Commits and deployments are also tracked by Sentry for this version.
+    usage:
+      version: 2.1
+
+      orbs:
+        sentry-cli: picturepipe/sentry-cli@volatile
+
+      jobs:
+        deploy-testing:
+          docker:
+            - image: buildpack-deps:stable
+          steps:
+            - checkout
+            - run: echo "Deploy release to testing"
+        deploy-staging:
+          docker:
+            - image: buildpack-deps:stable
+          steps:
+            - checkout
+            - run: echo "Deploy release to staging"
+        deploy-production:
+          docker:
+            - image: buildpack-deps:stable
+          steps:
+            - checkout
+            - run: echo "Deploy release to production"
+        sentry-release-new-testing:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-cli/release-new
+        sentry-release-new-staging:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-cli/release-new:
+                tagged-release: true
+        sentry-release-finalize-testing:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-cli/release-finalize
+        sentry-release-finalize-staging:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-cli/release-finalize:
+                tagged-release: true
+        sentry-release-deploy-testing:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-release/release-deploy:
+                env: "testing"
+        sentry-release-deploy-staging:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-release/release-deploy:
+                env: "staging"
+                tagged-release: true
+        sentry-release-deploy-production:
+          executor: sentry-cli/default
+          steps:
+            - checkout
+            - sentry-cli/release-deploy:
+                env: "production"
+                tagged-release: true
+
+      workflows:
+        version: 2
+        deploy:
+          jobs:
+            - deploy-staging:
+                requires:
+                  - sentry-release-new
+                filters:
+                  branches:
+                    only:
+                      - develop
+            - start-production-deployment:
+                type: approval
+                requires:
+                  - sentry-release-finalize
+                filters:
+                  branches:
+                    ignore: /.*/
+                  tags:
+                    only: /.*/
+            - deploy-production:
+                requires:
+                  - start-production-deployment
+                filters:
+                  branches:
+                    ignore: /.*/
+                  tags:
+                    only: /.*/
+            - sentry-release-new:
+                context: org-global
+                filters:
+                  branches:
+                    only:
+                      - develop
+            - sentry-release-finalize:
+                context: org-global
+                requires:
+                  - deploy-staging
+                filters:
+                  branches:
+                    only:
+                      - develop
+            - sentry-release-deploy-staging:
+                context: org-global
+                requires:
+                  - sentry-release-finalize
+                filters:
+                  branches:
+                    only:
+                      - develop
+            - sentry-release-deploy-production:
+                context: org-global
+                requires:
+                  - deploy-production
+                filters:
+                  branches:
+                    ignore: /.*/
+                  tags:
+                    only: /.*/
+
+executors:
+  default:
+    description: >
+      Official sentry-cli Docker image.
+    docker:
+      - image: getsentry/sentry-cli:1.37.4@sha256:0f52d3b9733ce7e1c72bc86bb2eb540b612c3387e574f12f239ec6556e5f68f2
+
+default-parameters: &default-parameters
+  org:
+    description: >
+      Sentry organization slug.
+    type: string
+    default: $SENTRY_ORG
+  tagged-release:
+    description: >
+      Configure if this is a tagged release. If false, <VERSION> will be set by executing
+      `sentry-cli releases propose-version`. If true <VERSION> will be set to $CIRCLE_TAG.
+    type: boolean
+    default: false
+
+commands:
+  release-new:
+    description: >
+      Create a new Sentry release. Execute only once per release.
+    parameters:
+      <<: *default-parameters
+      project:
+        description: >
+          Sentry project slug.
+        type: string
+        default: $SENTRY_PROJECT
+    steps:
+      - run:
+          name: Create a new Sentry release
+          command: |
+            if << parameters.tagged-release >>; then
+              VERSION=$CIRCLE_TAG
+            else
+              VERSION=$(sentry-cli releases propose-version)
+            fi
+            sentry-cli releases new --org "<< parameters.org >>" \
+              --project "<< parameters.project >>" "$VERSION"
+  release-finalize:
+    description: >
+      Finalize a Sentry release and set commits. Execute only once per release.
+    parameters:
+      <<: *default-parameters
+    steps:
+      - run:
+          name: Finalize a Sentry release and set commits
+          command: |
+            if << parameters.tagged-release >>; then
+              VERSION=$CIRCLE_TAG
+            else
+              VERSION=$(sentry-cli releases propose-version)
+            fi
+            sentry-cli releases finalize --org "<< parameters.org >>" "$VERSION"
+            sentry-cli releases set-commits --auto --org "<< parameters.org >>" "$VERSION"
+  release-deploy:
+    description: >
+      Create a new Sentry release deployment. Execute for each deployment of a release. If the
+      release has been finalized, execute afterwards.
+    parameters:
+      <<: *default-parameters
+      env:
+        description: >
+          Sentry environment for this release deployment.
+        type: string
+    steps:
+      - run:
+          name: Create a new Sentry release deployment
+          command: |
+            if << parameters.tagged-release >>; then
+              VERSION=$CIRCLE_TAG
+            else
+              VERSION=$(sentry-cli releases propose-version)
+            fi
+            sentry-cli releases deploys "$VERSION" new --env "<< parameters.env >>" \
+              --org "<< parameters.org >>"
