@@ -221,12 +221,6 @@ default-parameters: &default-parameters
       Sentry organization slug.
     type: string
     default: $SENTRY_ORG
-  tagged-release:
-    description: >
-      Configure if this is a tagged release. If false, <VERSION> will be set by executing
-      `sentry-cli releases propose-version`. If true <VERSION> will be set to $CIRCLE_TAG.
-    type: boolean
-    default: false
 
 commands:
   checkout-to-workspace:
@@ -238,6 +232,27 @@ commands:
           root: /root
           paths:
             - project
+  set-version:
+    description: >
+      Set version for Sentry release, write to file and persist to workspace.
+
+      Will first run `git describe --tags` to set the version. If this fails, the output of
+      `sentry-cli releases propose-version` will be used as version.
+    steps:
+      - attach_workspace:
+          at: /root
+      - run:
+          name: Set version for Sentry release
+          command: |
+            if [ "$(git describe --tags 2>/dev/null)" ]; then
+              git describe --tags > sentry-release-version.txt
+            else
+              sentry-cli releases propose-version > sentry-release-version.txt
+            fi
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - project/sentry-release-version.txt
   release-new:
     description: >
       Create a new Sentry release. Execute only once per release.
@@ -254,11 +269,7 @@ commands:
       - run:
           name: Create a new Sentry release
           command: |
-            if << parameters.tagged-release >>; then
-              VERSION=$CIRCLE_TAG
-            else
-              VERSION=$(sentry-cli releases propose-version)
-            fi
+            VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" new \
               --project "<< parameters.project >>" "$VERSION"
   release-finalize:
@@ -272,11 +283,7 @@ commands:
       - run:
           name: Finalize a Sentry release and set commits
           command: |
-            if << parameters.tagged-release >>; then
-              VERSION=$CIRCLE_TAG
-            else
-              VERSION=$(sentry-cli releases propose-version)
-            fi
+            VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
             sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
   release-deploy:
@@ -295,10 +302,6 @@ commands:
       - run:
           name: Create a new Sentry release deployment
           command: |
-            if << parameters.tagged-release >>; then
-              VERSION=$CIRCLE_TAG
-            else
-              VERSION=$(sentry-cli releases propose-version)
-            fi
+            VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" deploys "$VERSION" new \
               --env "<< parameters.env >>"
