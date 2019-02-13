@@ -4,6 +4,6 @@
   "schedule": ["after 7:00 before 19:00 every weekday"],
   "timezone": "Europe/Berlin",
   "circleci": {
-    "fileMatch": ["(^|/).circleci/config.yml$", "(^|/)src/*\\.yml$"]
+    "fileMatch": ["(^|/).circleci/config.yml$", "(^|/)src/.+\.yml$"]
   }
 }
