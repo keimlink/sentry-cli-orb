@@ -6,7 +6,11 @@ orbs:
 workflows:
   pack-and-publish:
     jobs:
-      - orb-tools/pack
+      - orb-tools/lint:
+          use-default-rules: false
+      - orb-tools/pack:
+          requires:
+            - orb-tools/lint
       - orb-tools/publish-dev:
           context: org-global
           orb-name: picturepipe/sentry-cli
