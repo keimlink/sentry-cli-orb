@@ -209,6 +209,11 @@ executors:
       Official sentry-cli Docker image.
     docker:
       - image: getsentry/sentry-cli:1.39.1@sha256:84231714277cc26c76a36d2c00a767e1956c95b0342e358dd2b8b43e1c08fbb8
+  scm:
+    description: >
+      Docker image with common source control management tools installed.
+    docker:
+      - image: buildpack-deps:stable-scm
 
 default-parameters: &default-parameters
   org:
