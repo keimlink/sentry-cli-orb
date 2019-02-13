@@ -229,6 +229,15 @@ default-parameters: &default-parameters
     default: false
 
 commands:
+  checkout-to-workspace:
+    description: >
+      Check out source code and persist to workspace.
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: /root
+          paths:
+            - project
   release-new:
     description: >
       Create a new Sentry release. Execute only once per release.
@@ -240,6 +249,8 @@ commands:
         type: string
         default: $SENTRY_PROJECT
     steps:
+      - attach_workspace:
+          at: /root
       - run:
           name: Create a new Sentry release
           command: |
@@ -256,6 +267,8 @@ commands:
     parameters:
       <<: *default-parameters
     steps:
+      - attach_workspace:
+          at: /root
       - run:
           name: Finalize a Sentry release and set commits
           command: |
@@ -277,6 +290,8 @@ commands:
           Sentry environment for this release deployment.
         type: string
     steps:
+      - attach_workspace:
+          at: /root
       - run:
           name: Create a new Sentry release deployment
           command: |
