@@ -27,129 +27,87 @@ examples:
         sentry-cli: picturepipe/sentry-cli@volatile
 
       jobs:
-        checkout-to-workspace:
+        deploy:
           docker:
             - image: buildpack-deps:stable
+          parameters:
+            env:
+              description: >
+                Environment to deploy to.
+              type: string
           steps:
             - checkout
-            - persist_to_workspace:
-                root: /root
-                paths:
-                  - project
-        deploy-testing:
-          docker:
-            - image: buildpack-deps:stable
-          steps:
-            - checkout
-            - run: echo "Deploy release to testing"
-        deploy-staging:
-          docker:
-            - image: buildpack-deps:stable
-          steps:
-            - checkout
-            - run: echo "Deploy release to staging"
-        deploy-production:
-          docker:
-            - image: buildpack-deps:stable
-          steps:
-            - checkout
-            - run: echo "Deploy release to production"
-        sentry-release-new-testing:
-          executor: sentry-cli/default
-          steps:
-            - attach_workspace:
-                at: /root
-            - sentry-cli/release-new
-        sentry-release-new-staging:
-          executor: sentry-cli/default
-          steps:
-            - sentry-cli/release-new:
-                tagged-release: true
-        sentry-release-finalize-testing:
-          executor: sentry-cli/default
-          steps:
-            - attach_workspace:
-                at: /root
-            - sentry-cli/release-finalize
-        sentry-release-finalize-staging:
-          executor: sentry-cli/default
-          steps:
-            - attach_workspace:
-                at: /root
-            - sentry-cli/release-finalize:
-                tagged-release: true
-        sentry-release-deploy-testing:
-          executor: sentry-cli/default
-          steps:
-            - attach_workspace:
-                at: /root
-            - sentry-cli/release-deploy:
-                env: "testing"
-        sentry-release-deploy-staging:
-          executor: sentry-cli/default
-          steps:
-            - sentry-cli/release-deploy:
-                env: "staging"
-                tagged-release: true
-        sentry-release-deploy-production:
-          executor: sentry-cli/default
-          steps:
-            - sentry-cli/release-deploy:
-                env: "production"
-                tagged-release: true
+            - run: echo "Deploy release to << parameters.env >>"
 
       workflows:
         version: 2
         deploy:
           jobs:
-            - checkout-to-workspace:
+            - sentry-cli/checkout-to-workspace:
                 filters:
                   branches:
                     only:
                       - develop
                   tags:
                     only: /.*/
-            - sentry-release-new-testing:
-                context: org-global
+            - sentry-cli/set-version:
                 requires:
-                  - checkout-to-workspace
+                  - sentry-cli/checkout-to-workspace
                 filters:
                   branches:
                     only:
                       - develop
-            - deploy-testing:
+                  tags:
+                    only: /.*/
+            - sentry-cli/sentry-release-new:
+                context: org-global
+                name: sentry-release-new-testing
+                requires:
+                  - sentry-cli/set-version
+                filters:
+                  branches:
+                    only:
+                      - develop
+            - deploy:
+                name: deploy-testing
+                env: testing
                 requires:
                   - sentry-release-new-testing
                 filters:
                   branches:
                     only:
                       - develop
-            - sentry-release-finalize-testing:
+            - sentry-cli/sentry-release-finalize:
                 context: org-global
+                name: sentry-release-finalize-testing
                 requires:
-                  - checkout-to-workspace
                   - deploy-testing
                 filters:
                   branches:
                     only:
                       - develop
-            - sentry-release-deploy-testing:
+            - sentry-cli/sentry-release-deploy:
                 context: org-global
+                env: testing
                 requires:
-                  - checkout-to-workspace
                   - sentry-release-finalize-testing
                 filters:
                   branches:
                     only:
                       - develop
-            - sentry-release-new-staging:
+            - sentry-cli/sentry-release-new:
                 context: org-global
+                name: sentry-release-new-staging
+                requires:
+                  - sentry-cli/set-version
                 filters:
                   branches:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - deploy-staging:
+            - deploy:
+                name: deploy-staging
+                env: staging
                 requires:
                   - sentry-release-new-staging
                 filters:
@@ -157,18 +115,19 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-release-finalize-staging:
+            - sentry-cli/sentry-release-finalize:
                 context: org-global
+                name: sentry-release-finalize-staging
                 requires:
-                  - checkout-to-workspace
                   - deploy-staging
                 filters:
                   branches:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-release-deploy-staging:
+            - sentry-cli/sentry-release-deploy:
                 context: org-global
+                env: staging
                 requires:
                   - sentry-release-finalize-staging
                 filters:
@@ -185,7 +144,9 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - deploy-production:
+            - deploy:
+                name: deploy-production
+                env: production
                 requires:
                   - start-production-deployment
                 filters:
@@ -193,8 +154,9 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-release-deploy-production:
+            - sentry-cli/sentry-release-deploy:
                 context: org-global
+                env: production
                 requires:
                   - deploy-production
                 filters:
