@@ -16,3 +16,7 @@ workflows:
           orb-name: picturepipe/sentry-cli
           requires:
             - orb-tools/pack
+          filters:
+            branches:
+              only:
+                - master
