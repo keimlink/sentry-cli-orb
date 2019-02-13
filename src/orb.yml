@@ -224,7 +224,7 @@ default-parameters: &default-parameters
 
 commands:
   checkout-to-workspace:
-    description: >
+    description: &checkout-to-workspace-description >
       Check out source code and persist to workspace.
     steps:
       - checkout
@@ -233,7 +233,7 @@ commands:
           paths:
             - project
   set-version:
-    description: >
+    description: &set-version-description >
       Set version for Sentry release, write to file and persist to workspace.
 
       Will first run `git describe --tags` to set the version. If this fails, the output of
@@ -254,9 +254,9 @@ commands:
           paths:
             - project/sentry-release-version.txt
   release-new:
-    description: >
+    description: &release-new-description >
       Create a new Sentry release. Execute only once per release.
-    parameters:
+    parameters: &release-new-parameters
       <<: *default-parameters
       project:
         description: >
@@ -273,9 +273,9 @@ commands:
             sentry-cli releases --org "<< parameters.org >>" new \
               --project "<< parameters.project >>" "$VERSION"
   release-finalize:
-    description: >
+    description: &release-finalize-description >
       Finalize a Sentry release and set commits. Execute only once per release.
-    parameters:
+    parameters: &release-finalize-parameters
       <<: *default-parameters
     steps:
       - attach_workspace:
@@ -287,10 +287,10 @@ commands:
             sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
             sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
   release-deploy:
-    description: >
+    description: &release-deploy-description >
       Create a new Sentry release deployment. Execute for each deployment of a release. If the
       release has been finalized, execute afterwards.
-    parameters:
+    parameters: &release-deploy-parameters
       <<: *default-parameters
       env:
         description: >
@@ -305,3 +305,39 @@ commands:
             VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" deploys "$VERSION" new \
               --env "<< parameters.env >>"
+
+jobs:
+  checkout-to-workspace:
+    description: *checkout-to-workspace-description
+    executor: scm
+    steps:
+      - checkout-to-workspace
+  set-version:
+    description: *set-version-description
+    executor: default
+    steps:
+      - run:
+          name: Install Git
+          command: |
+            apk update
+            apk add git
+      - set-version
+  release-new:
+    description: *release-new-description
+    executor: default
+    parameters: *release-new-parameters
+    steps:
+      - release-new
+  release-finalize:
+    description: *release-finalize-description
+    executor: default
+    parameters: *release-finalize-parameters
+    steps:
+      - release-finalize
+  release-deploy:
+    description: *release-deploy-description
+    executor: default
+    parameters: *release-deploy-parameters
+    steps:
+      - release-deploy:
+          env: << parameters.env >>
