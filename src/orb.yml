@@ -208,7 +208,7 @@ executors:
     description: >
       Official sentry-cli Docker image.
     docker:
-      - image: getsentry/sentry-cli:1.39.0@sha256:f28fe6093177600649a693cd7ff5aa7b8b3900f2a4a17daf9103ec5f66050309
+      - image: getsentry/sentry-cli:1.39.1@sha256:84231714277cc26c76a36d2c00a767e1956c95b0342e358dd2b8b43e1c08fbb8
 
 default-parameters: &default-parameters
   org:
