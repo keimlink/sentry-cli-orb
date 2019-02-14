@@ -58,7 +58,7 @@ examples:
                       - develop
                   tags:
                     only: /.*/
-            - sentry-clirelease-new:
+            - sentry-cli/release-new:
                 context: org-global
                 name: sentry-release-new-testing
                 requires:
