@@ -21,6 +21,10 @@ uses [Semantic Versioning](https://semver.org/). So the Semantic Version segment
     ```console
     circleci orb publish promote picturepipe/sentry-cli@dev:"$(git rev-parse HEAD | cut -c 1-7)" [major|minor|patch]
     ```
+5.  Verify the release:
+    ```console
+    circleci orb info picturepipe/sentry-cli
+    ```
 
 ## License
 
