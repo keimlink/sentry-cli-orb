@@ -211,6 +211,7 @@ commands:
             else
               sentry-cli releases propose-version > sentry-release-version.txt
             fi
+            cat sentry-release-version.txt
       - persist_to_workspace:
           root: /root
           paths:
