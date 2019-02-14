@@ -59,7 +59,7 @@ examples:
                       - develop
                   tags:
                     only: /.*/
-            - sentry-cli/sentry-release-new:
+            - sentry-clirelease-new:
                 context: org-global
                 name: sentry-release-new-testing
                 requires:
@@ -77,7 +77,7 @@ examples:
                   branches:
                     only:
                       - develop
-            - sentry-cli/sentry-release-finalize:
+            - sentry-cli/release-finalize:
                 context: org-global
                 name: sentry-release-finalize-testing
                 requires:
@@ -86,7 +86,7 @@ examples:
                   branches:
                     only:
                       - develop
-            - sentry-cli/sentry-release-deploy:
+            - sentry-cli/release-deploy:
                 context: org-global
                 env: testing
                 requires:
@@ -95,7 +95,7 @@ examples:
                   branches:
                     only:
                       - develop
-            - sentry-cli/sentry-release-new:
+            - sentry-cli/release-new:
                 context: org-global
                 name: sentry-release-new-staging
                 requires:
@@ -115,7 +115,7 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/sentry-release-finalize:
+            - sentry-cli/release-finalize:
                 context: org-global
                 name: sentry-release-finalize-staging
                 requires:
@@ -125,7 +125,7 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/sentry-release-deploy:
+            - sentry-cli/release-deploy:
                 context: org-global
                 env: staging
                 requires:
@@ -154,7 +154,7 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/sentry-release-deploy:
+            - sentry-cli/release-deploy:
                 context: org-global
                 env: production
                 requires:
