@@ -1,5 +1,4 @@
-# This code is licensed from reelport GmbH to the user under the MIT license. See
-# https://circleci.com/orbs/registry/licensing for details.
+# This code is licensed from reelport GmbH to the user under the MIT license.
 version: 2.1
 
 description: >
