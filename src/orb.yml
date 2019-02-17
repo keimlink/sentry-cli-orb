@@ -76,9 +76,9 @@ examples:
                   branches:
                     only:
                       - develop
-            - sentry-cli/release-finalize:
+            - sentry-cli/release-finalize-set-commits:
                 context: org-global
-                name: sentry-release-finalize-testing
+                name: sentry-release-finalize-set-commits-testing
                 requires:
                   - deploy-testing
                 filters:
@@ -89,7 +89,7 @@ examples:
                 context: org-global
                 env: testing
                 requires:
-                  - sentry-release-finalize-testing
+                  - sentry-release-finalize-set-commits-testing
                 filters:
                   branches:
                     only:
@@ -114,9 +114,9 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-finalize:
+            - sentry-cli/release-finalize-set-commits:
                 context: org-global
-                name: sentry-release-finalize-staging
+                name: sentry-release-finalize-set-commits-staging
                 requires:
                   - deploy-staging
                 filters:
@@ -128,7 +128,7 @@ examples:
                 context: org-global
                 env: staging
                 requires:
-                  - sentry-release-finalize-staging
+                  - sentry-release-finalize-set-commits-staging
                 filters:
                   branches:
                     ignore: /.*/
@@ -137,7 +137,7 @@ examples:
             - start-production-deployment:
                 type: approval
                 requires:
-                  - sentry-release-finalize-staging
+                  - sentry-release-finalize-set-commits-staging
                 filters:
                   branches:
                     ignore: /.*/
@@ -236,17 +236,29 @@ commands:
               --project "<< parameters.project >>" "$VERSION"
   release-finalize:
     description: &release-finalize-description >
-      Finalize a Sentry release and set commits. Execute only once per release.
+      Finalize a Sentry release. Execute only once per release.
     parameters: &release-finalize-parameters
       <<: *default-parameters
     steps:
       - attach_workspace:
           at: /root
       - run:
-          name: Finalize a Sentry release and set commits
+          name: Finalize a Sentry release
           command: |
             VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
+  release-set-commits:
+    description: >
+      Set commits of a Sentry release. Execute only once per release.
+    parameters:
+      <<: *default-parameters
+    steps:
+      - attach_workspace:
+          at: /root
+      - run:
+          name: Set commits of a Sentry release
+          command: |
+            VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
   release-deploy:
     description: &release-deploy-description >
@@ -290,12 +302,14 @@ jobs:
     parameters: *release-new-parameters
     steps:
       - release-new
-  release-finalize:
-    description: *release-finalize-description
+  release-finalize-set-commits:
+    description: >
+      Finalize a Sentry release and set commits. Execute only once per release.
     executor: default
     parameters: *release-finalize-parameters
     steps:
       - release-finalize
+      - release-set-commits
   release-deploy:
     description: *release-deploy-description
     executor: default
