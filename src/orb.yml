@@ -60,18 +60,19 @@ examples:
                     only: /.*/
             - sentry-cli/release-new:
                 context: org-global
-                name: sentry-release-new-testing
                 requires:
                   - sentry-cli/set-version
                 filters:
                   branches:
                     only:
                       - develop
+                  tags:
+                    only: /.*/
             - deploy:
                 name: deploy-testing
                 env: testing
                 requires:
-                  - sentry-release-new-testing
+                  - sentry-cli/release-new
                 filters:
                   branches:
                     only:
@@ -94,21 +95,11 @@ examples:
                   branches:
                     only:
                       - develop
-            - sentry-cli/release-new:
-                context: org-global
-                name: sentry-release-new-staging
-                requires:
-                  - sentry-cli/set-version
-                filters:
-                  branches:
-                    ignore: /.*/
-                  tags:
-                    only: /.*/
             - deploy:
                 name: deploy-staging
                 env: staging
                 requires:
-                  - sentry-release-new-staging
+                  - sentry-cli/release-new
                 filters:
                   branches:
                     ignore: /.*/
