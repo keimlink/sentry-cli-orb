@@ -160,7 +160,7 @@ executors:
     description: >
       Official sentry-cli Docker image.
     docker:
-      - image: getsentry/sentry-cli:1.39.1@sha256:84231714277cc26c76a36d2c00a767e1956c95b0342e358dd2b8b43e1c08fbb8
+      - image: getsentry/sentry-cli:1.40.0@sha256:c9183ce260424ac70c1b1ee8aa46e324d632341bfc19e4bfe9b304f8e00a51a1
   scm:
     description: >
       Docker image with common source control management tools installed.
