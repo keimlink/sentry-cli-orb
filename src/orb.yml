@@ -82,7 +82,7 @@ examples:
                   tags:
                     only: /.*/
 
-  staging-production-pipeline:
+  testing-staging-production-pipeline:
     description: >
       Example workflow for continuous delivery pipeline using testing, staging and production
       environments. Each environment uses a matching Sentry environment.
