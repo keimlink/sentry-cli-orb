@@ -16,8 +16,7 @@ uses [Semantic Versioning](https://semver.org/). So the Semantic Version segment
     ```console
     circleci orb info picturepipe/sentry-cli
     ```
-3.  Decide which version you want to release. You have to set the last argument in the next step
-    accordingly!
+3.  Decide which version to release. Set the last argument in the next step accordingly!
 4.  Promote the development version of the orb to a semantic release:
     ```console
     circleci orb publish promote picturepipe/sentry-cli@dev:"$(git rev-parse HEAD | cut -c 1-7)" [major|minor|patch]
@@ -25,6 +24,14 @@ uses [Semantic Versioning](https://semver.org/). So the Semantic Version segment
 5.  Verify the release:
     ```console
     circleci orb info picturepipe/sentry-cli
+    ```
+6.  Create a Git tag with the same version as the release:
+    ```console
+    git tag --annotate --message=<version> <version>
+    ```
+7.  Push the tag:
+    ```console
+    git push --tags
     ```
 
 ## License
