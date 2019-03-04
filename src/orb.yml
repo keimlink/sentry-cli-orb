@@ -45,7 +45,7 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-new:
+            - sentry-cli/create-release:
                 context: org-global
                 requires:
                   - sentry-cli/set-version
@@ -56,13 +56,13 @@ examples:
                     only: /.*/
             - deploy:
                 requires:
-                  - sentry-cli/release-new
+                  - sentry-cli/create-release
                 filters:
                   branches:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-finalize-set-commits:
+            - sentry-cli/finalize-release-set-commits:
                 context: org-global
                 requires:
                   - deploy
@@ -71,11 +71,11 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-deploy:
+            - sentry-cli/create-deployment:
                 context: org-global
                 env: production
                 requires:
-                  - sentry-cli/release-finalize-set-commits
+                  - sentry-cli/finalize-release-set-commits
                 filters:
                   branches:
                     ignore: /.*/
@@ -132,7 +132,7 @@ examples:
                       - develop
                   tags:
                     only: /.*/
-            - sentry-cli/release-new:
+            - sentry-cli/create-release:
                 context: org-global
                 requires:
                   - sentry-cli/set-version
@@ -146,25 +146,25 @@ examples:
                 name: deploy-testing
                 env: testing
                 requires:
-                  - sentry-cli/release-new
+                  - sentry-cli/create-release
                 filters:
                   branches:
                     only:
                       - develop
-            - sentry-cli/release-finalize-set-commits:
+            - sentry-cli/finalize-release-set-commits:
                 context: org-global
-                name: sentry-release-finalize-set-commits-testing
+                name: sentry-finalize-release-set-commits-testing
                 requires:
                   - deploy-testing
                 filters:
                   branches:
                     only:
                       - develop
-            - sentry-cli/release-deploy:
+            - sentry-cli/create-deployment:
                 context: org-global
                 env: testing
                 requires:
-                  - sentry-release-finalize-set-commits-testing
+                  - sentry-finalize-release-set-commits-testing
                 filters:
                   branches:
                     only:
@@ -173,15 +173,15 @@ examples:
                 name: deploy-staging
                 env: staging
                 requires:
-                  - sentry-cli/release-new
+                  - sentry-cli/create-release
                 filters:
                   branches:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-finalize-set-commits:
+            - sentry-cli/finalize-release-set-commits:
                 context: org-global
-                name: sentry-release-finalize-set-commits-staging
+                name: sentry-finalize-release-set-commits-staging
                 requires:
                   - deploy-staging
                 filters:
@@ -189,11 +189,11 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-deploy:
+            - sentry-cli/create-deployment:
                 context: org-global
                 env: staging
                 requires:
-                  - sentry-release-finalize-set-commits-staging
+                  - sentry-finalize-release-set-commits-staging
                 filters:
                   branches:
                     ignore: /.*/
@@ -202,7 +202,7 @@ examples:
             - start-production-deployment:
                 type: approval
                 requires:
-                  - sentry-release-finalize-set-commits-staging
+                  - sentry-finalize-release-set-commits-staging
                 filters:
                   branches:
                     ignore: /.*/
@@ -218,7 +218,7 @@ examples:
                     ignore: /.*/
                   tags:
                     only: /.*/
-            - sentry-cli/release-deploy:
+            - sentry-cli/create-deployment:
                 context: org-global
                 env: production
                 requires:
@@ -280,10 +280,10 @@ commands:
           root: /root
           paths:
             - project/sentry-release-version.txt
-  release-new:
-    description: &release-new-description >
+  create-release:
+    description: &create-release-description >
       Create a new Sentry release. Execute only once per release.
-    parameters: &release-new-parameters
+    parameters: &create-release-parameters
       <<: *default-parameters
       project:
         description: >
@@ -299,10 +299,10 @@ commands:
             VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" new \
               --project "<< parameters.project >>" "$VERSION"
-  release-finalize:
-    description: &release-finalize-description >
+  finalize-release:
+    description: &finalize-release-description >
       Finalize a Sentry release. Execute only once per release.
-    parameters: &release-finalize-parameters
+    parameters: &finalize-release-parameters
       <<: *default-parameters
     steps:
       - attach_workspace:
@@ -312,7 +312,7 @@ commands:
           command: |
             VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
-  release-set-commits:
+  set-commits:
     description: >
       Set commits of a Sentry release. Execute only once per release.
     parameters:
@@ -325,11 +325,11 @@ commands:
           command: |
             VERSION=$(cat sentry-release-version.txt)
             sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
-  release-deploy:
-    description: &release-deploy-description >
+  create-deployment:
+    description: &create-deployment-description >
       Create a new Sentry release deployment. Execute for each deployment of a release. If the
       release has been finalized, execute afterwards.
-    parameters: &release-deploy-parameters
+    parameters: &create-deployment-parameters
       <<: *default-parameters
       env:
         description: >
@@ -360,24 +360,24 @@ jobs:
           command: |
             apk add --no-progress --update-cache git
       - set-version
-  release-new:
-    description: *release-new-description
+  create-release:
+    description: *create-release-description
     executor: default
-    parameters: *release-new-parameters
+    parameters: *create-release-parameters
     steps:
-      - release-new
-  release-finalize-set-commits:
+      - create-release
+  finalize-release-set-commits:
     description: >
       Finalize a Sentry release and set commits. Execute only once per release.
     executor: default
-    parameters: *release-finalize-parameters
+    parameters: *finalize-release-parameters
     steps:
-      - release-finalize
-      - release-set-commits
-  release-deploy:
-    description: *release-deploy-description
+      - finalize-release
+      - set-commits
+  create-deployment:
+    description: *create-deployment-description
     executor: default
-    parameters: *release-deploy-parameters
+    parameters: *create-deployment-parameters
     steps:
-      - release-deploy:
+      - create-deployment:
           env: << parameters.env >>
