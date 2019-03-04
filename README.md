@@ -1,6 +1,7 @@
 # Sentry Command Line Interface Orb
 
 [![CircleCI Build](https://circleci.com/gh/PicturePipe/sentry-cli-orb.svg?style=shield&circle-token=a980080f2b43f3d71c43a4caffb644b3cac8d86c)](https://circleci.com/gh/PicturePipe/sentry-cli-orb "CircleCI Build")
+[![Orb Version](https://img.shields.io/endpoint.svg?url=https://badges.circleci.io/orb/picturepipe/sentry-cli)](https://circleci.com/orbs/registry/orb/picturepipe/sentry-cli "Orb Version")
 [![Renovate enabled](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)](https://renovateapp.com/ "Renovate enabled")
 
 CircleCI [orb](https://circleci.com/orbs/) to manage your Sentry projects with [sentry-cli](https://github.com/getsentry/sentry-cli/).
