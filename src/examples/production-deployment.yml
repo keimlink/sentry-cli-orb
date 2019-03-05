@@ -1,0 +1,72 @@
+description: >
+  Example workflow to deploy to production. Runs all jobs in the workflow only for tags. Uses the
+  Git tag as Sentry version and creates a new Sentry release for it. Commits and deployment will be
+  tracked by Sentry after a successful deployment.
+usage:
+  version: 2.1
+
+  orbs:
+    sentry-cli: picturepipe/sentry-cli@volatile
+
+  jobs:
+    deploy:
+      docker:
+        - image: buildpack-deps:stable
+      steps:
+        - checkout
+        - run: echo "Deploy release to production"
+
+  workflows:
+    version: 2
+    deploy:
+      jobs:
+        - sentry-cli/checkout-to-workspace:
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/set-version:
+            requires:
+              - sentry-cli/checkout-to-workspace
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/create-release:
+            context: org-global
+            requires:
+              - sentry-cli/set-version
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - deploy:
+            requires:
+              - sentry-cli/create-release
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/finalize-release-set-commits:
+            context: org-global
+            requires:
+              - deploy
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/create-deployment:
+            context: org-global
+            env: production
+            requires:
+              - sentry-cli/finalize-release-set-commits
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
