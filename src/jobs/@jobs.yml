@@ -1,0 +1,56 @@
+checkout-to-workspace:
+  description: >
+    Check out source code and persist to workspace.
+  executor: scm
+  steps:
+    - checkout-to-workspace
+set-version:
+  description: >
+    Install Git, set version for Sentry release, write to file and persist to workspace.
+  executor: default
+  steps:
+    - run:
+        name: Install Git
+        command: |
+          apk add --no-progress --update-cache git
+    - set-version
+create-release:
+  description: >
+    Create a new Sentry release. Execute only once per release.
+  executor: default
+  parameters:
+    org: &org-parameter
+      description: >
+        Sentry organization slug.
+      type: string
+      default: $SENTRY_ORG
+    project:
+      description: >
+        Sentry project slug.
+      type: string
+      default: $SENTRY_PROJECT
+  steps:
+    - create-release
+finalize-release-set-commits:
+  description: >
+    Finalize a Sentry release and set commits. Execute only once per release.
+  executor: default
+  parameters:
+    org: *org-parameter
+  steps:
+    - finalize-release
+    - set-commits
+create-deployment:
+  description: >
+    Create a new Sentry release deployment. Execute for each deployment of a release. If the
+    release has been finalized, execute afterwards.
+  executor: default
+  parameters:
+    env:
+      description: >
+        Sentry environment for this release deployment.
+      type: string
+    org: *org-parameter
+  steps:
+    - create-deployment:
+        env: << parameters.env >>

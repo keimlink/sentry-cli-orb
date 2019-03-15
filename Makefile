@@ -4,13 +4,12 @@
 help:
 	@grep -E '^[\.a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: process
-process: ## Resolve the orb and it's dependencies
-	@circleci orb process src/orb.yml
+orb.yml: $(shell find src -name '*.yml') ## Pack up the orb into a single file
+	circleci config pack src > orb.yml
 
 .PHONY: validate
-validate: ## Validate the orb
-	circleci orb validate src/orb.yml
+validate: orb.yml ## Validate the orb
+	circleci orb validate orb.yml
 
 .PHONY: yamllint
 yamllint: ## Lint YAML files

@@ -1,0 +1,99 @@
+checkout-to-workspace:
+  description: >
+    Check out source code and persist to workspace.
+  steps:
+    - checkout
+    - persist_to_workspace:
+        root: /root
+        paths:
+          - project
+set-version:
+  description: >
+    Set version for Sentry release, write to file and persist to workspace.
+
+    Will first run `git describe --tags` to set the version. If this fails, the output of
+    `sentry-cli releases propose-version` will be used as version.
+  steps:
+    - attach_workspace:
+        at: /root
+    - run:
+        name: Set version for Sentry release
+        command: |
+          if git describe --tags > /dev/null 2>&1; then
+            git describe --tags > sentry-release-version.txt
+          else
+            sentry-cli releases propose-version > sentry-release-version.txt
+          fi
+          cat sentry-release-version.txt
+    - persist_to_workspace:
+        root: /root
+        paths:
+          - project/sentry-release-version.txt
+create-release:
+  description: >
+    Create a new Sentry release. Execute only once per release.
+  parameters:
+    org: &org-parameter
+      description: >
+        Sentry organization slug.
+      type: string
+      default: $SENTRY_ORG
+    project:
+      description: >
+        Sentry project slug.
+      type: string
+      default: $SENTRY_PROJECT
+  steps:
+    - attach_workspace:
+        at: /root
+    - run:
+        name: Create a new Sentry release
+        command: |
+          VERSION=$(cat sentry-release-version.txt)
+          sentry-cli releases --org "<< parameters.org >>" new \
+            --project "<< parameters.project >>" "$VERSION"
+finalize-release:
+  description: >
+    Finalize a Sentry release. Execute only once per release.
+  parameters:
+    org: *org-parameter
+  steps:
+    - attach_workspace:
+        at: /root
+    - run:
+        name: Finalize a Sentry release
+        command: |
+          VERSION=$(cat sentry-release-version.txt)
+          sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
+set-commits:
+  description: >
+    Set commits of a Sentry release. Execute only once per release.
+  parameters:
+    org: *org-parameter
+  steps:
+    - attach_workspace:
+        at: /root
+    - run:
+        name: Set commits of a Sentry release
+        command: |
+          VERSION=$(cat sentry-release-version.txt)
+          sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
+create-deployment:
+  description: >
+    Create a new Sentry release deployment. Execute for each deployment of a release. If the
+    release has been finalized, execute afterwards.
+  parameters:
+    env:
+      description: >
+        Sentry environment for this release deployment.
+      type: string
+    org: *org-parameter
+  steps:
+    - attach_workspace:
+        at: /root
+    - run:
+        name: Create a new Sentry release deployment
+        command: |
+          VERSION=$(cat sentry-release-version.txt)
+          sentry-cli releases --org "<< parameters.org >>" deploys "$VERSION" new \
+            --env "<< parameters.env >>"

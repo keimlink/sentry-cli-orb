@@ -1,0 +1,148 @@
+description: >
+  Example workflow for continuous delivery pipeline using testing, staging and production
+  environments. Each environment uses a matching Sentry environment.
+
+  Each push to the develop branch triggers a testing deployment with a Sentry release using the Git
+  revision as version. Commits and deployment are also tracked by Sentry for this version.
+
+  Each push to the master branch first triggers a staging deployment with a Sentry release using
+  the Git tag as version. The same version is used for the manual production deployment. Commits
+  and deployments are also tracked by Sentry for this version.
+usage:
+  version: 2.1
+
+  orbs:
+    sentry-cli: picturepipe/sentry-cli@volatile
+
+  jobs:
+    deploy:
+      docker:
+        - image: buildpack-deps:stable
+      parameters:
+        env:
+          description: >
+            Environment to deploy to.
+          type: string
+      steps:
+        - checkout
+        - run: echo "Deploy release to << parameters.env >>"
+
+  workflows:
+    version: 2
+    deploy:
+      jobs:
+        - sentry-cli/checkout-to-workspace:
+            filters:
+              branches:
+                only:
+                  - develop
+              tags:
+                only: /.*/
+        - sentry-cli/set-version:
+            requires:
+              - sentry-cli/checkout-to-workspace
+            filters:
+              branches:
+                only:
+                  - develop
+              tags:
+                only: /.*/
+        - sentry-cli/create-release:
+            context: org-global
+            requires:
+              - sentry-cli/set-version
+            filters:
+              branches:
+                only:
+                  - develop
+              tags:
+                only: /.*/
+        - deploy:
+            name: deploy-testing
+            env: testing
+            requires:
+              - sentry-cli/create-release
+            filters:
+              branches:
+                only:
+                  - develop
+        - sentry-cli/finalize-release-set-commits:
+            context: org-global
+            name: sentry-finalize-release-set-commits-testing
+            requires:
+              - deploy-testing
+            filters:
+              branches:
+                only:
+                  - develop
+        - sentry-cli/create-deployment:
+            context: org-global
+            name: sentry-create-deployment-testing
+            env: testing
+            requires:
+              - sentry-finalize-release-set-commits-testing
+            filters:
+              branches:
+                only:
+                  - develop
+        - deploy:
+            name: deploy-staging
+            env: staging
+            requires:
+              - sentry-cli/create-release
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/finalize-release-set-commits:
+            context: org-global
+            name: sentry-finalize-release-set-commits-staging
+            requires:
+              - deploy-staging
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/create-deployment:
+            context: org-global
+            name: sentry-create-deployment-staging
+            env: staging
+            requires:
+              - sentry-finalize-release-set-commits-staging
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - start-production-deployment:
+            type: approval
+            requires:
+              - sentry-finalize-release-set-commits-staging
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - deploy:
+            name: deploy-production
+            env: production
+            requires:
+              - start-production-deployment
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/
+        - sentry-cli/create-deployment:
+            context: org-global
+            name: sentry-create-deployment-production
+            env: production
+            requires:
+              - deploy-production
+            filters:
+              branches:
+                ignore: /.*/
+              tags:
+                only: /.*/

@@ -1,5 +1,8 @@
 extends: default
 
+ignore: |
+  orb.yml
+
 rules:
   document-start: disable
   line-length:
