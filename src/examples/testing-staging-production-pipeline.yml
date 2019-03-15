@@ -77,6 +77,7 @@ usage:
                   - develop
         - sentry-cli/create-deployment:
             context: org-global
+            name: sentry-create-deployment-testing
             env: testing
             requires:
               - sentry-finalize-release-set-commits-testing
@@ -106,6 +107,7 @@ usage:
                 only: /.*/
         - sentry-cli/create-deployment:
             context: org-global
+            name: sentry-create-deployment-staging
             env: staging
             requires:
               - sentry-finalize-release-set-commits-staging
@@ -135,6 +137,7 @@ usage:
                 only: /.*/
         - sentry-cli/create-deployment:
             context: org-global
+            name: sentry-create-deployment-production
             env: production
             requires:
               - deploy-production
