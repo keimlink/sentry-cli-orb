@@ -19,7 +19,7 @@ set-version:
     - run:
         name: Set version for Sentry release
         command: |
-          if [ "$(git describe --tags 2>/dev/null)" ]; then
+          if git describe --tags > /dev/null 2>&1; then
             git describe --tags > sentry-release-version.txt
           else
             sentry-cli releases propose-version > sentry-release-version.txt
