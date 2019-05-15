@@ -2,7 +2,7 @@ default:
   description: >
     Official sentry-cli Docker image.
   docker:
-    - image: getsentry/sentry-cli:1.41.1@sha256:f4d3fe986af425e701a70d2b90fa83747f8fef9d812187d32c12c64f88f5b9ab
+    - image: getsentry/sentry-cli:1.43.0@sha256:a9459359674fde1d35b1972a5fd2655a9d61857e09fefe2d66e33ac69dc4f5cc
 scm:
   description: >
     Docker image with common source control management tools installed.
