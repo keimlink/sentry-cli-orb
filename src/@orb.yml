@@ -5,3 +5,4 @@ description: >
   set to authenticate with Sentry. Also set the SENTRY_ORG environment variable if you don't want
   to configure each command separately. The Sentry project slug can be configured using the
   SENTRY_PROJECT environment variable.
+  This orb's source is available here: https://github.com/PicturePipe/sentry-cli-orb
