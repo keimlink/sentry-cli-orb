@@ -22,13 +22,13 @@ create-release:
     org: &org-parameter
       description: >
         Sentry organization slug.
-      type: string
-      default: $SENTRY_ORG
+      type: env_var_name
+      default: SENTRY_ORG
     project:
       description: >
         Sentry project slug.
-      type: string
-      default: $SENTRY_PROJECT
+      type: env_var_name
+      default: SENTRY_PROJECT
   steps:
     - create-release
 finalize-release-set-commits:
