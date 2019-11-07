@@ -50,8 +50,8 @@ create-release:
         name: Create a new Sentry release
         command: |
           VERSION=$(cat sentry-release-version.txt)
-          sentry-cli releases --org "<< parameters.org >>" new \
-            --project "<< parameters.project >>" "$VERSION"
+          sentry-cli releases --org "${<< parameters.org >>}" new \
+            --project "${<< parameters.project >>}" "${VERSION}"
 finalize-release:
   description: >
     Finalize a Sentry release. Execute only once per release.
@@ -64,7 +64,7 @@ finalize-release:
         name: Finalize a Sentry release
         command: |
           VERSION=$(cat sentry-release-version.txt)
-          sentry-cli releases --org "<< parameters.org >>" finalize "$VERSION"
+          sentry-cli releases --org "${<< parameters.org >>}" finalize "${VERSION}"
 set-commits:
   description: >
     Set commits of a Sentry release. Execute only once per release.
@@ -77,7 +77,7 @@ set-commits:
         name: Set commits of a Sentry release
         command: |
           VERSION=$(cat sentry-release-version.txt)
-          sentry-cli releases --org "<< parameters.org >>" set-commits --auto "$VERSION"
+          sentry-cli releases --org "${<< parameters.org >>}" set-commits --auto "${VERSION}"
 create-deployment:
   description: >
     Create a new Sentry release deployment. Execute for each deployment of a release. If the
@@ -95,5 +95,5 @@ create-deployment:
         name: Create a new Sentry release deployment
         command: |
           VERSION=$(cat sentry-release-version.txt)
-          sentry-cli releases --org "<< parameters.org >>" deploys "$VERSION" new \
+          sentry-cli releases --org "${<< parameters.org >>}" deploys "${VERSION}" new \
             --env "<< parameters.env >>"
