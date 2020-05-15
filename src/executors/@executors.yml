@@ -7,4 +7,4 @@ scm:
   description: >
     Docker image with common source control management tools installed.
   docker:
-    - image: buildpack-deps:stable-scm@sha256:a0dfbb6189f79fd0e2bb7eb008c62b2ff1de8588563a52aa79140c5f8e4da203
+    - image: buildpack-deps:stable-scm@sha256:682857c3673ff1a5a2da6d337545f8f313d0a9de2cbe4d0ac27a7bf8694ed36a
