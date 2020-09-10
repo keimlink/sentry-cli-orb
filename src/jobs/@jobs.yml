@@ -30,7 +30,8 @@ create-release:
       type: env_var_name
       default: SENTRY_PROJECT
   steps:
-    - create-release
+    - create-release:
+        project: << parameters.project >>
 finalize-release-set-commits:
   description: >
     Finalize a Sentry release and set commits. Execute only once per release.
