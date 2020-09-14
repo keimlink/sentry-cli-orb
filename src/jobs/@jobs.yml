@@ -30,7 +30,8 @@ create-release:
       type: env_var_name
       default: SENTRY_PROJECT
   steps:
-    - create-release
+    - create-release:
+        org: << parameters.org >>
 finalize-release-set-commits:
   description: >
     Finalize a Sentry release and set commits. Execute only once per release.
@@ -38,8 +39,10 @@ finalize-release-set-commits:
   parameters:
     org: *org-parameter
   steps:
-    - finalize-release
-    - set-commits
+    - finalize-release:
+        org: << parameters.org >>
+    - set-commits:
+        org: << parameters.org >>
 create-deployment:
   description: >
     Create a new Sentry release deployment. Execute for each deployment of a release. If the
@@ -54,3 +57,4 @@ create-deployment:
   steps:
     - create-deployment:
         env: << parameters.env >>
+        org: << parameters.org >>
